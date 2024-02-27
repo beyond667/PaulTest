@@ -44,7 +44,8 @@ public class MainActivity extends Activity {
             @Override
             public void onClick(View v) {
 
-//                Intent intent = new Intent("com.on.systemUi.start.voice");
+
+                Intent intent = new Intent("com.on.systemUi.start.voice");
 //                intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
 //                startActivity(intent);
                 Log.e("===","========111==0="+checkSIMExist(0));
