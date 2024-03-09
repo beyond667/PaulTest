@@ -25,31 +25,7 @@ public class ClientMainActivity extends Activity {
 
     private static final String TAG = "ClientMainActivity";
     private IPaulAidlInterface iPaulAidlInterface;
-    class MyThread extends Thread{
-        Object lock = new Object();
-        @Override
-        public void run() {
-            super.run();
-        }
 
-        public  void doSome(){
-            synchronized (lock){
-                Log.e(TAG,"==========doSome"+this);
-                try {
-                    lock.wait();
-                    Log.e(TAG,"==========doSome 结束");
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        public void notifyDo(){
-            synchronized (lock){
-                lock.notifyAll();
-            }
-        }
-    }
-    private Thread thread;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -60,46 +36,15 @@ public class ClientMainActivity extends Activity {
         findViewById(R.id.send).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                Log.e(TAG,"==========客户端发送"+this);
-
-                if(thread==null){
-                   thread =  new Thread(){
-                        @Override
-                        public void run() {
-                            MyThread myThread = new MyThread();
-                            myThread.start();
-                            myThread.doSome();
-
-                            try {
-                                Thread.sleep(100);
-                            } catch (InterruptedException e) {
-                                e.printStackTrace();
-                            }
-                            Log.e(TAG,"==========休眠结束"+this);
-                            myThread.doSome();
-                        }
-                    };
+                if(iPaulAidlInterface==null){
+                    bindPaulService();
+                }else{
+                    try {
+                        iPaulAidlInterface.test1("111");
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
                 }
-
-                thread.start();
-
-
-//                synchronized (lock) {
-//                    Log.e(TAG,"==========执行 notify");
-//                    // 调用 notify 方法
-//                    lock.notifyAll();
-//                }
-
-//
-//                if(iPaulAidlInterface==null){
-//                    bindPaulService();
-//                }else{
-//                    try {
-//                        iPaulAidlInterface.test1("111");
-//                    } catch (RemoteException e) {
-//                        e.printStackTrace();
-//                    }
-//                }
 
             }
         });
