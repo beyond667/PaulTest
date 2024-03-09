@@ -45,6 +45,18 @@ public class WallUtils {
     public static List<String> paths = new ArrayList<>();
     public static int current = 0;
 
+    public static void  getAllFile(File file){
+        File[] list = file.listFiles();
+        if (list == null) return ;
+        for (File f : list) {
+            if (f.isDirectory()) {
+                getAllFile(f);
+            } else {
+                paths.add(f.getAbsolutePath());
+            }
+        }
+    }
+
     public static String getPath(Context context, boolean add) {
         String filename = "";
         try {
@@ -55,7 +67,12 @@ public class WallUtils {
                     File file = new File(ss[1] + "/" + ss[2] + "/mypaper");
                     File[] files = file.listFiles();
                     for (File file1 : files) {
-                        paths.add(file1.getAbsolutePath());
+                        if(file1.isDirectory()){
+                            getAllFile(file1);
+                        }else{
+                            paths.add(file1.getAbsolutePath());
+                        }
+
                     }
                 } else {
                     return "";
