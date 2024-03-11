@@ -5,14 +5,19 @@ import static com.paul.wallpaper.WallUtils.TIME;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
@@ -33,25 +38,26 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "Main";
     private ActivityMainBinding binding;
-    private int REQUEST_CODE=1;
+    private int REQUEST_CODE = 1;
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         Window window = getWindow();
-        window.addFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
         super.onCreate(savedInstanceState);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
-        int time =SpUtils.getIntSP(this,TIME);
-        if(time==0){
+        checkPermission();
+        int time = SpUtils.getIntSP(this, TIME);
+        if (time == 0) {
             //默认1分钟切换壁纸
             time = 60000;
             SpUtils.setIntSp(MainActivity.this, TIME, time);
         }
-        binding.time.setText(time/1000/60+"");
+        binding.time.setText(time / 1000 / 60 + "");
 
         requestPermission();
         binding.next.setOnClickListener(new View.OnClickListener() {
@@ -60,12 +66,12 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String str = binding.time.getText().toString();
                 if (!TextUtils.isEmpty(str)) {
-                    int time = Integer.parseInt(str) * 1000*60;
+                    int time = Integer.parseInt(str) * 1000 * 60;
                     MyService.time = time;
                     SpUtils.setIntSp(MainActivity.this, TIME, time);
                 }
-                SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this,CURRENT)+1);
-                binding.bg.setImageBitmap(WallUtils.getWallBitmap(MainActivity.this,false));
+                SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this, CURRENT) + 1);
+                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
                 start();
             }
         });
@@ -75,13 +81,13 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(View v) {
                 String str = binding.time.getText().toString();
                 if (!TextUtils.isEmpty(str)) {
-                    int time = Integer.parseInt(str) * 1000*60;
+                    int time = Integer.parseInt(str) * 1000 * 60;
                     MyService.time = time;
                     SpUtils.setIntSp(MainActivity.this, TIME, time);
                 }
-                SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this,CURRENT)-1);
+                SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this, CURRENT) - 1);
 
-                binding.bg.setImageBitmap(WallUtils.getWallBitmap(MainActivity.this,false));
+                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
                 start();
             }
         });
@@ -100,6 +106,15 @@ public class MainActivity extends AppCompatActivity {
                 stop();
             }
         });
+
+        binding.delete.setOnClickListener(new View.OnClickListener() {
+            @SuppressLint("ResourceType")
+            @Override
+            public void onClick(View v) {
+                delete();
+            }
+        });
+
         start();
     }
 
@@ -113,6 +128,19 @@ public class MainActivity extends AppCompatActivity {
         stopService(intent);
     }
 
+    private void delete() {
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("确定删除");
+        builder.setPositiveButton(getString(R.string.ok), new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                WallUtils.delete(MainActivity.this);
+                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
+                start();
+            }
+        });
+        builder.show();
+    }
 
 
     @Override
@@ -121,13 +149,14 @@ public class MainActivity extends AppCompatActivity {
         requestPermission();
 
     }
-    private void setBg(){
+
+    private void setBg() {
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                binding.bg.setImageBitmap(WallUtils.getWallBitmap(MainActivity.this,false));
+                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
             }
-        },100);
+        }, 100);
     }
 
 
@@ -142,6 +171,7 @@ public class MainActivity extends AppCompatActivity {
             }
         }
     }
+
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
@@ -155,4 +185,71 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private AlertDialog dialog;
+    private static final int REQUEST_EXTERNAL_STORAGE = 1;
+    private static String[] PERMISSIONS_STORAGE = {
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+    };
+    private boolean havePermission = false;
+
+    private void checkPermission() {
+        //检查权限（NEED_PERMISSION）是否被授权 PackageManager.PERMISSION_GRANTED表示同意授权
+        if (Build.VERSION.SDK_INT >= 30) {
+            if (!Environment.isExternalStorageManager()) {
+                if (dialog != null) {
+                    dialog.dismiss();
+                    dialog = null;
+                }
+                dialog = new AlertDialog.Builder(this)
+                        .setTitle("提示")//设置标题
+                        .setMessage("请开启文件访问权限，否则无法正常使用本应用！")
+                        .setNegativeButton("取消", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int i) {
+                                dialog.dismiss();
+                            }
+                        })
+                        .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                Intent intent = new Intent(Settings.ACTION_MANAGE_ALL_FILES_ACCESS_PERMISSION);
+                                startActivity(intent);
+                            }
+                        }).create();
+                dialog.show();
+            } else {
+                havePermission = true;
+                Log.i("swyLog", "Android 11以上，当前已有权限");
+            }
+        } else {
+            if (Build.VERSION.SDK_INT > Build.VERSION_CODES.M) {
+                if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+                    //申请权限
+                    if (dialog != null) {
+                        dialog.dismiss();
+                        dialog = null;
+                    }
+                    dialog = new AlertDialog.Builder(this)
+                            .setTitle("提示")//设置标题
+                            .setMessage("请开启文件访问权限，否则无法正常使用本应用！")
+                            .setPositiveButton("确定", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.dismiss();
+                                    ActivityCompat.requestPermissions(MainActivity.this, PERMISSIONS_STORAGE, REQUEST_EXTERNAL_STORAGE);
+                                }
+                            }).create();
+                    dialog.show();
+                } else {
+                    havePermission = true;
+                    Log.i("swyLog", "Android 6.0以上，11以下，当前已有权限");
+                }
+            } else {
+                havePermission = true;
+                Log.i("swyLog", "Android 6.0以下，已获取权限");
+            }
+        }
+    }
 }

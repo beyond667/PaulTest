@@ -129,4 +129,15 @@ public class WallUtils {
         }
     }
 
+    public static void delete(Context context) {
+        String path = getPath(context, false);
+        File file = new File(path);
+        Log.e(TAG,"已删除"+file.getAbsolutePath());
+        boolean delete = file.delete();
+        if(delete){
+            paths.remove(path);
+        }
+        Log.e(TAG,"已删除成功："+delete);
+    }
+
 }
