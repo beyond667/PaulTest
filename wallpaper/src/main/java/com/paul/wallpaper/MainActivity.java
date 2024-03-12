@@ -126,6 +126,12 @@ public class MainActivity extends AppCompatActivity {
                 setFav();
             }
         });
+        binding.bgLayout.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                binding.time.clearFocus();
+            }
+        });
     }
     private  void setFav(){
         String favPath = WallUtils.getPath(this,false);
