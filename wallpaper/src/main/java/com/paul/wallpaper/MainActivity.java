@@ -5,12 +5,14 @@ import static com.paul.wallpaper.WallUtils.TIME;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -41,11 +43,11 @@ public class MainActivity extends AppCompatActivity {
     private int REQUEST_CODE = 1;
 
 
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        requestWindowFeature(Window.FEATURE_NO_TITLE);
-        Window window = getWindow();
-        getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
+        Utils.transparentNavAndStatusBar(this);
         super.onCreate(savedInstanceState);
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
@@ -116,11 +118,24 @@ public class MainActivity extends AppCompatActivity {
         });
 
         start();
+        binding.shoucang.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //移动到最爱文件夹
+                WallUtils.moveCurrentToFavOrNot(MainActivity.this);
+                setFav();
+            }
+        });
+    }
+    private  void setFav(){
+        String favPath = WallUtils.getPath(this,false);
+        binding.fav.setSelected(favPath.contains("最爱"));
     }
 
     private void start() {
         Intent intent = new Intent(this, MyService.class);
         startService(intent);
+        setFav();
     }
 
     private void stop() {

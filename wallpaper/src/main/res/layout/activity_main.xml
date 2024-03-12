@@ -9,15 +9,6 @@
     android:orientation="vertical"
     tools:context=".MainActivity">
 
-<!--    <ImageView-->
-<!--        android:id="@+id/bg"-->
-<!--        android:layout_width="match_parent"-->
-<!--        android:layout_height="match_parent"-->
-<!--        app:layout_constraintStart_toStartOf="parent"-->
-<!--        app:layout_constraintEnd_toEndOf="parent"-->
-<!--        app:layout_constraintTop_toTopOf="parent"-->
-<!--        app:layout_constraintBottom_toBottomOf="parent"-->
-<!--        />-->
     <EditText
         android:id="@+id/time"
         android:layout_width="match_parent"
@@ -29,11 +20,24 @@
         android:text="1"
         android:hint="时间（分）默认1" />
 
+    <ImageView
+        android:id="@+id/fav"
+        android:layout_width="50dp"
+        android:layout_height="50dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="50dp"
+        android:layout_marginEnd="20dp"
+        android:alpha="0.7"
+        android:background="@drawable/star_bg"
+        />
+
     <Button
         android:id="@+id/before"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="300dp"
+        android:alpha="0.4"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/time"
         android:text="before" />
@@ -43,6 +47,7 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="300dp"
+        android:alpha="0.4"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/time"
         android:text="next" />
@@ -53,20 +58,31 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="30dp"
+        android:alpha="0.4"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/before"
         android:text="delete" />
+
+
+    <Button
+        android:id="@+id/shoucang"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginTop="30dp"
+        android:alpha="0.4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/next"
+        android:text="收藏" />
+
 
     <Button
         android:id="@+id/stop"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="30dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/next"
+        android:alpha="0.4"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/delete"
         android:text="stop" />
-
-
-
 
 </androidx.constraintlayout.widget.ConstraintLayout>
