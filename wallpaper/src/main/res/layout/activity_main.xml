@@ -2,10 +2,9 @@
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/bg_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    android:id="@+id/bg_layout"
     android:orientation="vertical"
     tools:context=".MainActivity">
 
@@ -13,44 +12,69 @@
         android:id="@+id/time"
         android:layout_width="100dp"
         android:layout_height="50dp"
-        android:inputType="number"
         android:layout_marginTop="300dp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
+        android:hint="时间（分）默认1"
+        android:inputType="number"
         android:text="1"
-        android:hint="时间（分）默认1" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <ImageView
         android:id="@+id/fav"
         android:layout_width="50dp"
         android:layout_height="50dp"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
         android:layout_marginTop="50dp"
         android:layout_marginEnd="20dp"
         android:alpha="0.7"
         android:background="@drawable/star_bg"
-        />
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/ll_info"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:background="#ff00ff"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/fav">
+
+        <TextView
+            android:id="@+id/index"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.5" />
+
+        <TextView
+            android:id="@+id/path"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:alpha="0.5" />
+
+    </LinearLayout>
+    >
 
     <Button
         android:id="@+id/before"
         android:layout_width="wrap_content"
-        android:layout_height="50dp"
+        android:layout_height="wrap_content"
         android:layout_marginTop="30dp"
-        android:alpha="0.4"
+        android:background="#00000000"
+        android:text="before"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/time"
-        android:text="before" />
+        app:layout_constraintTop_toBottomOf="@+id/time" />
 
     <Button
         android:id="@+id/next"
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="30dp"
-        android:alpha="0.4"
+        android:background="#00000000"
+        android:text="next"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/time"
-        android:text="next" />
+        app:layout_constraintTop_toBottomOf="@+id/time" />
 
 
     <Button
@@ -58,10 +82,10 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="30dp"
-        android:alpha="0.4"
+        android:background="#00000000"
+        android:text="delete"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/before"
-        android:text="delete" />
+        app:layout_constraintTop_toBottomOf="@+id/before" />
 
 
     <Button
@@ -69,10 +93,10 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="30dp"
-        android:alpha="0.4"
+        android:background="#00000000"
+        android:text="收藏"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/next"
-        android:text="收藏" />
+        app:layout_constraintTop_toBottomOf="@+id/next" />
 
 
     <Button
@@ -80,9 +104,19 @@
         android:layout_width="wrap_content"
         android:layout_height="50dp"
         android:layout_marginTop="30dp"
-        android:alpha="0.4"
+        android:background="#00000000"
+        android:text="stop"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/delete"
-        android:text="stop" />
+        app:layout_constraintTop_toBottomOf="@+id/delete" />
+
+    <Button
+        android:id="@+id/info"
+        android:layout_width="wrap_content"
+        android:layout_height="50dp"
+        android:layout_marginTop="30dp"
+        android:background="#00000000"
+        android:text="info"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/shoucang" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

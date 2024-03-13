@@ -1,18 +1,17 @@
 package com.paul.wallpaper;
 
+import static com.paul.wallpaper.WallUtils.ALREADY_WAIT_TIME;
 import static com.paul.wallpaper.WallUtils.CURRENT;
 import static com.paul.wallpaper.WallUtils.TIME;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.WallpaperManager;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.os.Build;
 import android.os.Bundle;
@@ -23,8 +22,6 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
-import android.view.WindowManager;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
@@ -41,9 +38,6 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Main";
     private ActivityMainBinding binding;
     private int REQUEST_CODE = 1;
-
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -66,31 +60,14 @@ public class MainActivity extends AppCompatActivity {
             @SuppressLint("ResourceType")
             @Override
             public void onClick(View v) {
-                String str = binding.time.getText().toString();
-                if (!TextUtils.isEmpty(str)) {
-                    int time = Integer.parseInt(str) * 1000 * 60;
-                    MyService.time = time;
-                    SpUtils.setIntSp(MainActivity.this, TIME, time);
-                }
-                SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this, CURRENT) + 1);
-                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
-                start();
+                setNextOrBefore(1);
             }
         });
         binding.before.setOnClickListener(new View.OnClickListener() {
             @SuppressLint("ResourceType")
             @Override
             public void onClick(View v) {
-                String str = binding.time.getText().toString();
-                if (!TextUtils.isEmpty(str)) {
-                    int time = Integer.parseInt(str) * 1000 * 60;
-                    MyService.time = time;
-                    SpUtils.setIntSp(MainActivity.this, TIME, time);
-                }
-                SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this, CURRENT) - 1);
-
-                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
-                start();
+                setNextOrBefore(-1);
             }
         });
         binding.stop.setOnClickListener(new View.OnClickListener() {
@@ -117,7 +94,7 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        start();
+        start(false);
         binding.shoucang.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -132,14 +109,47 @@ public class MainActivity extends AppCompatActivity {
                 binding.time.clearFocus();
             }
         });
+        binding.info.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (binding.llInfo.getVisibility() == View.VISIBLE) {
+                    binding.llInfo.setVisibility(View.GONE);
+                } else {
+                    binding.llInfo.setVisibility(View.VISIBLE);
+                }
+            }
+        });
     }
-    private  void setFav(){
-        String favPath = WallUtils.getPath(this,false);
+
+    private void setNextOrBefore(int add) {
+        String str = binding.time.getText().toString();
+        if (!TextUtils.isEmpty(str)) {
+            int time = Integer.parseInt(str) * 1000 * 60;
+            MyService.waitTime = time;
+            SpUtils.setIntSp(MainActivity.this, TIME, time);
+        }
+
+        SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this, CURRENT) + add);
+        SpUtils.setLongSp(MainActivity.this, ALREADY_WAIT_TIME, 0);
+        binding.bgLayout.setBackground(new BitmapDrawable(getResources(), WallUtils.getWallBitmap(MainActivity.this, false)));
+        setCurrent();
+        start(true);
+    }
+
+    private void setFav() {
+        String favPath = WallUtils.getPath(this, false);
         binding.fav.setSelected(favPath.contains("最爱"));
     }
 
-    private void start() {
+    private void setCurrent() {
+        int index = SpUtils.getIntSP(MainActivity.this, CURRENT);
+        binding.index.setText(String.valueOf(index));
+        binding.path.setText(WallUtils.getIndex(index));
+    }
+
+    private void start(boolean needRefresh) {
         Intent intent = new Intent(this, MyService.class);
+        intent.putExtra("needRefresh",needRefresh);
         startService(intent);
         setFav();
     }
@@ -156,8 +166,8 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 WallUtils.delete(MainActivity.this);
-                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
-                start();
+                binding.bgLayout.setBackground(new BitmapDrawable(getResources(), WallUtils.getWallBitmap(MainActivity.this, false)));
+                start(false);
             }
         });
         builder.show();
@@ -168,14 +178,14 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         requestPermission();
-
+        setCurrent();
     }
 
     private void setBg() {
         new Handler(Looper.getMainLooper()).postDelayed(new Runnable() {
             @Override
             public void run() {
-                binding.bgLayout.setBackground(new BitmapDrawable(getResources(),WallUtils.getWallBitmap(MainActivity.this, false)));
+                binding.bgLayout.setBackground(new BitmapDrawable(getResources(), WallUtils.getWallBitmap(MainActivity.this, false)));
             }
         }, 100);
     }
@@ -265,11 +275,11 @@ public class MainActivity extends AppCompatActivity {
                     dialog.show();
                 } else {
                     havePermission = true;
-                    Log.i("swyLog", "Android 6.0以上，11以下，当前已有权限");
+                    LogUtils.i("swyLog", "Android 6.0以上，11以下，当前已有权限");
                 }
             } else {
                 havePermission = true;
-                Log.i("swyLog", "Android 6.0以下，已获取权限");
+                LogUtils.i("swyLog", "Android 6.0以下，已获取权限");
             }
         }
     }

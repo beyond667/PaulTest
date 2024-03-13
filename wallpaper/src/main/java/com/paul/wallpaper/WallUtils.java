@@ -119,7 +119,13 @@ public class WallUtils {
             return false;
         }
     }
+    public static String getIndex( int index) {
+        if(paths.size()>index){
+            return paths.get(index);
+        }
 
+        return "";
+    }
     public static String getPath(Context context, boolean add) {
         String filename = "";
         try {
@@ -163,12 +169,14 @@ public class WallUtils {
             return getPath(context,add);
 
         }
-        Log.e("==", "========111======filename==" + filename);
+        Log.e(TAG, "filename:" + filename);
         return filename;
     }
 
     public static final String TIME = "time";
     public static final String CURRENT = "current";
+    public static final String START_TIME = "start_time";
+    public static final String ALREADY_WAIT_TIME = "already_wait_time";
 
     public static Bitmap getWallBitmap(Context context, boolean autoAdd) {
         String path = getPath(context, autoAdd);
