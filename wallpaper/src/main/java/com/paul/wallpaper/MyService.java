@@ -4,6 +4,7 @@ import static com.paul.wallpaper.WallUtils.ALREADY_WAIT_TIME;
 import static com.paul.wallpaper.WallUtils.CURRENT;
 import static com.paul.wallpaper.WallUtils.START_TIME;
 import static com.paul.wallpaper.WallUtils.TIME;
+import static com.paul.wallpaper.WallUtils.current;
 
 import android.app.Notification;
 import android.app.NotificationChannel;
@@ -23,6 +24,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
 
+import com.paul.wallpaper.bean.WallChangeEvent;
+
+import org.greenrobot.eventbus.EventBus;
+
 public class MyService extends Service {
     private static final String TAG = "MyService";
 
@@ -35,8 +40,8 @@ public class MyService extends Service {
     public void onCreate() {
         super.onCreate();
         DisplayMetrics dm = getResources().getDisplayMetrics();
-        mWidth = dm.widthPixels;
-        mHeight = 2400;
+        WallUtils.mWidth = dm.widthPixels;
+        WallUtils.mHeight = 2400;
         initTime();
 
         registSreenStatusReceiver();
@@ -81,8 +86,7 @@ public class MyService extends Service {
         }
 
         //重新写入startTime
-        long currentTime = System.currentTimeMillis();
-        SpUtils.setLongSp(this, START_TIME, currentTime);
+        SpUtils.setLongSp(this, START_TIME, System.currentTimeMillis());
 
         return START_STICKY;
     }
@@ -93,6 +97,7 @@ public class MyService extends Service {
             SpUtils.setLongSp(MyService.this, ALREADY_WAIT_TIME, 0);
             showNotification();
             handler.postDelayed(runnable, waitTime);
+            EventBus.getDefault().post(new WallChangeEvent(current));
         }
     };
 
@@ -106,7 +111,7 @@ public class MyService extends Service {
         NotificationCompat.Builder service = new NotificationCompat.Builder(this, "service");
         service.setContentTitle(SpUtils.getIntSP(this, CURRENT)+"" );
         service.setContentIntent(pi);
-        service.setContentText(WallUtils.getIndex(SpUtils.getIntSP(this, CURRENT)));
+        service.setContentText(WallUtils.getPathByIndex(SpUtils.getIntSP(this, CURRENT)));
         service.setSmallIcon(R.mipmap.ic_launcher);
         Notification notification = service.getNotification();
         startForeground(1, notification);
@@ -127,8 +132,7 @@ public class MyService extends Service {
 
     public static int waitTime = 6000;
 
-    public static int mWidth;
-    public static int mHeight;
+
 
     private void initTime() {
         waitTime = SpUtils.getIntSP(this, TIME);

@@ -1,8 +1,5 @@
 package com.paul.wallpaper;
 
-import static com.paul.wallpaper.MyService.mHeight;
-import static com.paul.wallpaper.MyService.mWidth;
-
 import android.app.WallpaperManager;
 import android.content.Context;
 import android.graphics.Bitmap;
@@ -21,7 +18,8 @@ public class WallUtils {
 
 
     private static String TAG = "WallUtils";
-
+    public static int mWidth;
+    public static int mHeight;
     public static Bitmap centerCrop(Bitmap srcBitmap, int desWidth, int desHeight) {
         int srcWidth = srcBitmap.getWidth();
         int srcHeight = srcBitmap.getHeight();
@@ -119,7 +117,20 @@ public class WallUtils {
             return false;
         }
     }
-    public static String getIndex( int index) {
+
+    public static int realIndex(Context context, int index) {
+        int realIndex = index;
+        if(index<0){
+            realIndex =  paths.size()-1;
+        }
+        if(index>=paths.size()){
+            realIndex =  0;
+        }
+        SpUtils.setIntSp(context, CURRENT, realIndex);
+        return realIndex;
+    }
+
+    public static String getPathByIndex(int index) {
         if(paths.size()>index){
             return paths.get(index);
         }
@@ -146,20 +157,12 @@ public class WallUtils {
                 } else {
                     return "";
                 }
-
             }
             current = SpUtils.getIntSP(context, CURRENT);
             if (add) {
                 current++;
             }
-            if (current >= paths.size() || current < 0) {
-                current = 0;
-                SpUtils.setIntSp(context, CURRENT, current);
-                paths.clear();
-                return getPath(context, false);
-            }
-            SpUtils.setIntSp(context, CURRENT, current);
-
+            current =realIndex(context,current);
             filename = paths.get(current);
         } catch (Exception e) {
             e.printStackTrace();
@@ -167,9 +170,7 @@ public class WallUtils {
             current = 0;
             SpUtils.setIntSp(context, CURRENT, current);
             return getPath(context,add);
-
         }
-        Log.e(TAG, "filename:" + filename);
         return filename;
     }
 

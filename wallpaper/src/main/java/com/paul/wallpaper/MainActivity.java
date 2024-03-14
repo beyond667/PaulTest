@@ -20,6 +20,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.text.TextUtils;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
@@ -29,7 +30,12 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
+import com.paul.wallpaper.bean.WallChangeEvent;
 import com.paul.wallpaper.databinding.ActivityMainBinding;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
 
@@ -43,6 +49,10 @@ public class MainActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         Utils.transparentNavAndStatusBar(this);
         super.onCreate(savedInstanceState);
+        EventBus.getDefault().register(this);
+        DisplayMetrics dm = getResources().getDisplayMetrics();
+        WallUtils.mWidth = dm.widthPixels;
+        WallUtils.mHeight = 2400;
 
         binding = ActivityMainBinding.inflate(getLayoutInflater());
         setContentView(binding.getRoot());
@@ -131,7 +141,6 @@ public class MainActivity extends AppCompatActivity {
 
         SpUtils.setIntSp(MainActivity.this, CURRENT, SpUtils.getIntSP(MainActivity.this, CURRENT) + add);
         SpUtils.setLongSp(MainActivity.this, ALREADY_WAIT_TIME, 0);
-        binding.bgLayout.setBackground(new BitmapDrawable(getResources(), WallUtils.getWallBitmap(MainActivity.this, false)));
         setCurrent();
         start(true);
     }
@@ -143,8 +152,11 @@ public class MainActivity extends AppCompatActivity {
 
     private void setCurrent() {
         int index = SpUtils.getIntSP(MainActivity.this, CURRENT);
-        binding.index.setText(String.valueOf(index));
-        binding.path.setText(WallUtils.getIndex(index));
+        int realIndex = WallUtils.realIndex(this,index);
+        binding.index.setText(String.valueOf(realIndex));
+        binding.path.setText(WallUtils.getPathByIndex(realIndex));
+        setFav();
+        binding.bgLayout.setBackground(new BitmapDrawable(getResources(), WallUtils.getWallBitmap(MainActivity.this, false)));
     }
 
     private void start(boolean needRefresh) {
@@ -167,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
             public void onClick(DialogInterface dialog, int which) {
                 WallUtils.delete(MainActivity.this);
                 binding.bgLayout.setBackground(new BitmapDrawable(getResources(), WallUtils.getWallBitmap(MainActivity.this, false)));
-                start(false);
+                start(true);
             }
         });
         builder.show();
@@ -282,5 +294,16 @@ public class MainActivity extends AppCompatActivity {
                 LogUtils.i("swyLog", "Android 6.0以下，已获取权限");
             }
         }
+    }
+
+    @Subscribe(threadMode = ThreadMode.MAIN)
+    public void onWallChangeEvent(WallChangeEvent event){
+        LogUtils.e(TAG, "onWallChangeEvent");
+        setCurrent();
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        EventBus.getDefault().unregister(this);
     }
 }
