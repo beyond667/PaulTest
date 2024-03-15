@@ -2,6 +2,7 @@ package com.paul.wallpaper;
 
 import static com.paul.wallpaper.WallUtils.ALREADY_WAIT_TIME;
 import static com.paul.wallpaper.WallUtils.CURRENT;
+import static com.paul.wallpaper.WallUtils.DEFAULT_NAME;
 import static com.paul.wallpaper.WallUtils.TIME;
 
 import android.Manifest;
@@ -22,13 +23,19 @@ import android.provider.Settings;
 import android.text.TextUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
+import android.widget.PopupWindow;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.paul.wallpaper.bean.WallChangeEvent;
 import com.paul.wallpaper.databinding.ActivityMainBinding;
@@ -38,6 +45,7 @@ import org.greenrobot.eventbus.Subscribe;
 import org.greenrobot.eventbus.ThreadMode;
 
 import java.io.IOException;
+import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -117,6 +125,7 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 binding.time.clearFocus();
+                binding.skip.clearFocus();
             }
         });
         binding.info.setOnClickListener(new View.OnClickListener() {
@@ -129,8 +138,77 @@ public class MainActivity extends AppCompatActivity {
                 }
             }
         });
-    }
 
+        binding.changePath.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                ArrayList<String> paths = WallUtils.listFiles(MainActivity.this);
+                paths.add(0,DEFAULT_NAME);
+                showPopupWindow(paths);
+            }
+        });
+
+        binding.btSkip.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                String skipStr = binding.skip.getText().toString();
+                if(TextUtils.isEmpty(skipStr)){
+                    return;
+                }
+                int skip = Integer.parseInt(skipStr);
+                if(skip>=WallUtils.paths.size()){
+                    Toast.makeText(MainActivity.this,"请输入正确的数字0-"+WallUtils.paths.size(),Toast.LENGTH_SHORT).show();
+                }else{
+                    SpUtils.setIntSp(MainActivity.this, CURRENT, skip);
+                    SpUtils.setLongSp(MainActivity.this, ALREADY_WAIT_TIME, 0);
+                    setCurrent();
+                    start(true);
+                }
+            }
+        });
+
+        binding.skip.setOnFocusChangeListener(onFocusChangeListener);
+        binding.time.setOnFocusChangeListener(onFocusChangeListener);
+    }
+    private View.OnFocusChangeListener onFocusChangeListener = new View.OnFocusChangeListener() {
+        @Override
+        public void onFocusChange(View v, boolean hasFocus) {
+            if(!hasFocus){
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(v.getWindowToken(),0);
+            }
+        }
+    };
+    private void showPopupWindow(ArrayList<String> paths) {
+        View view = LayoutInflater.from(this).inflate(R.layout.files_pop,null);
+        RecyclerView recyclerView = (RecyclerView) view.findViewById(R.id.rv);
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(this);
+        linearLayoutManager.setOrientation(LinearLayoutManager.VERTICAL);
+        recyclerView.setLayoutManager(linearLayoutManager);
+        FileListAdapter scoreTeamAdapter = new FileListAdapter(paths);
+        recyclerView.setAdapter(scoreTeamAdapter);
+        scoreTeamAdapter.setOnItemClickListener(new FileListAdapter.OnItemClickListener() {
+            @Override
+            public void onClickItem(int position, String fileName) {
+                Log.e(TAG,"select:"+fileName);
+                if(!fileName.equals(DEFAULT_NAME)){
+                    WallUtils.selectPath = fileName;
+                }else{
+                    WallUtils.selectPath = "";
+                }
+
+                scoreTeamAdapter.notifyDataSetChanged();
+                WallUtils.clear(MainActivity.this);
+                WallUtils.initPathByCacheIfNeed(MainActivity.this);
+                setCurrent();
+                start(true);
+            }
+        });
+        PopupWindow popupWindow = new PopupWindow(view, ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        popupWindow.setContentView(view);
+        popupWindow.setFocusable(true);
+        popupWindow.showAsDropDown(binding.llInfo);
+    }
     private void setNextOrBefore(int add) {
         String str = binding.time.getText().toString();
         if (!TextUtils.isEmpty(str)) {
@@ -155,6 +233,8 @@ public class MainActivity extends AppCompatActivity {
         int realIndex = WallUtils.realIndex(this,index);
         binding.index.setText(String.valueOf(realIndex));
         binding.path.setText(WallUtils.getPathByIndex(realIndex));
+        binding.selectPath.setText(TextUtils.isEmpty(WallUtils.selectPath)?DEFAULT_NAME:WallUtils.selectPath);
+        binding.selectPathSize.setText(WallUtils.paths.size()+"");
         setFav();
         binding.bgLayout.setBackground(new BitmapDrawable(getResources(), WallUtils.getWallBitmap(MainActivity.this, false)));
     }
