@@ -11,6 +11,7 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.Message;
 import android.os.Parcel;
+import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
@@ -18,13 +19,18 @@ import android.view.WindowManager;
 
 import androidx.annotation.NonNull;
 
+import com.paul.test.server.IMemoryFileApi;
 import com.paul.test.server.IPaulAidlInterface;
+
+import java.io.FileInputStream;
+import java.nio.charset.Charset;
 
 
 public class ClientMainActivity extends Activity {
 
     private static final String TAG = "ClientMainActivity";
     private IPaulAidlInterface iPaulAidlInterface;
+    private IMemoryFileApi iMemoryFileApi;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -49,6 +55,42 @@ public class ClientMainActivity extends Activity {
             }
         });
 
+        findViewById(R.id.memory_share_get).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if(iMemoryFileApi==null){
+                    bindMemoryService();
+                }else{
+                    StringBuffer sb = new StringBuffer();
+                    try {
+                        ParcelFileDescriptor parcelFileDescriptor = iMemoryFileApi.getParcelFileDescriptor("111");
+                        if(parcelFileDescriptor==null){
+                            Log.e(TAG,"client 无法获取到共享内存");
+                            return;
+                        }
+                        FileInputStream fi = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+
+                        String str = new String();
+                        byte[] buffer = new byte[1024];
+                        while ((fi.read(buffer))!=-1){
+                            str = new String(buffer, "UTF-8");
+                            Log.e(TAG,str);
+                            sb.append(str);
+                        }
+                        fi.close();
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                    try {
+                        iMemoryFileApi.releaseParcelFileDescriptor("111");
+                    } catch (RemoteException e) {
+                        e.printStackTrace();
+                    }
+                    Log.e(TAG,"SB:"+sb.length());
+                }
+            }
+        });
+
         findViewById(R.id.unbind).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -57,7 +99,20 @@ public class ClientMainActivity extends Activity {
         });
     }
 
+    ServiceConnection memoryConnection = new ServiceConnection() {
 
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            Log.e(TAG, "==========客户端memoryConnection 绑定成功" + 111+"==="+service);
+            iMemoryFileApi = IMemoryFileApi.Stub.asInterface(service);
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            Log.e(TAG,"==========客户端解绑"+name);
+            iMemoryFileApi = null;
+        }
+    };
     ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
@@ -144,10 +199,11 @@ public class ClientMainActivity extends Activity {
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
     }
 
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-
+    private void bindMemoryService(){
+        Intent intent = new Intent();
+        intent.setAction("com.paul.test.server.share_memeory");
+        intent.setPackage("com.paul.test.server");
+        bindService(intent, memoryConnection, Context.BIND_AUTO_CREATE);
     }
+
 }

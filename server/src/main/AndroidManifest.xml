@@ -21,6 +21,16 @@
             </intent-filter>
         </service>
 
+        <service
+            android:name="com.paul.test.server.MyMemoryShareService"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.paul.test.server.share_memeory"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".ServerMainActivity"
             android:exported="true"
