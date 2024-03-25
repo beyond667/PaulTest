@@ -6,24 +6,16 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
-import android.os.Message;
-import android.os.Parcel;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
-import android.view.WindowManager;
-
-import androidx.annotation.NonNull;
 
 import com.paul.test.server.IMemoryFileApi;
 import com.paul.test.server.IPaulAidlInterface;
 
 import java.io.FileInputStream;
-import java.nio.charset.Charset;
 
 
 public class ClientMainActivity extends Activity {
@@ -38,13 +30,12 @@ public class ClientMainActivity extends Activity {
         setContentView(R.layout.activity_main);
 
 
-
         findViewById(R.id.send).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(iPaulAidlInterface==null){
+                if (iPaulAidlInterface == null) {
                     bindPaulService();
-                }else{
+                } else {
                     try {
                         iPaulAidlInterface.test1("111");
                     } catch (RemoteException e) {
@@ -58,36 +49,35 @@ public class ClientMainActivity extends Activity {
         findViewById(R.id.memory_share_get).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(iMemoryFileApi==null){
+                if (iMemoryFileApi == null) {
                     bindMemoryService();
-                }else{
-                    StringBuffer sb = new StringBuffer();
-                    try {
-                        ParcelFileDescriptor parcelFileDescriptor = iMemoryFileApi.getParcelFileDescriptor("111");
-                        if(parcelFileDescriptor==null){
-                            Log.e(TAG,"client 无法获取到共享内存");
-                            return;
-                        }
-                        FileInputStream fi = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
-
-                        String str = new String();
-                        byte[] buffer = new byte[1024];
-                        while ((fi.read(buffer))!=-1){
-                            str = new String(buffer, "UTF-8");
-                            Log.e(TAG,str);
-                            sb.append(str);
-                        }
-                        fi.close();
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                    try {
-                        iMemoryFileApi.releaseParcelFileDescriptor("111");
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    }
-                    Log.e(TAG,"SB:"+sb.length());
                 }
+                StringBuffer sb = new StringBuffer();
+                try {
+                    ParcelFileDescriptor parcelFileDescriptor = iMemoryFileApi.getParcelFileDescriptor("111");
+                    if (parcelFileDescriptor == null) {
+                        Log.e(TAG, "client 无法获取到共享内存");
+                        return;
+                    }
+                    FileInputStream fi = new FileInputStream(parcelFileDescriptor.getFileDescriptor());
+
+                    String str = new String();
+                    byte[] buffer = new byte[1024];
+                    while ((fi.read(buffer)) != -1) {
+                        str = new String(buffer, "UTF-8");
+                        Log.e(TAG, str);
+                        sb.append(str);
+                    }
+                    fi.close();
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+                try {
+                    iMemoryFileApi.releaseParcelFileDescriptor("111");
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+                Log.e(TAG, "SB:" + sb.length());
             }
         });
 
@@ -97,26 +87,33 @@ public class ClientMainActivity extends Activity {
                 unbindService(connection);
             }
         });
+
+        findViewById(R.id.provider).setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                startActivity(new Intent(ClientMainActivity.this,ClientProviderActivity.class));
+            }
+        });
     }
 
     ServiceConnection memoryConnection = new ServiceConnection() {
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.e(TAG, "==========客户端memoryConnection 绑定成功" + 111+"==="+service);
+            Log.e(TAG, "==========客户端memoryConnection 绑定成功" + 111 + "===" + service);
             iMemoryFileApi = IMemoryFileApi.Stub.asInterface(service);
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG,"==========客户端解绑"+name);
+            Log.e(TAG, "==========客户端解绑" + name);
             iMemoryFileApi = null;
         }
     };
     ServiceConnection connection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
-            Log.e(TAG, "==========客户端onServiceConnected 发送" + 111+"==="+service);
+            Log.e(TAG, "==========客户端onServiceConnected 发送" + 111 + "===" + service);
 /*
          // 实现一：用transact直接调
            // 1相当于跟服务端约定好的test1方法，aidl默认生成的方法code也是从1开始
@@ -163,8 +160,8 @@ public class ClientMainActivity extends Activity {
             // 因为如果用aidl自动生成的，其transact会先写writeInterfaceToken，再写param1，读写顺序要一样
             iPaulAidlInterface = IPaulAidlInterface.Stub.asInterface(service);
             try {
-                String result  = iPaulAidlInterface.test1("11");
-                Log.e(TAG,"==========客户端收到"+result);
+                String result = iPaulAidlInterface.test1("11");
+                Log.e(TAG, "==========客户端收到" + result);
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
@@ -188,18 +185,19 @@ public class ClientMainActivity extends Activity {
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
-            Log.e(TAG,"==========客户端解绑"+name);
+            Log.e(TAG, "==========客户端解绑" + name);
             iPaulAidlInterface = null;
         }
     };
-    private void bindPaulService(){
+
+    private void bindPaulService() {
         Intent intent = new Intent();
         intent.setAction("com.paul.test.server.test1");
         intent.setPackage("com.paul.test.server");
         bindService(intent, connection, Context.BIND_AUTO_CREATE);
     }
 
-    private void bindMemoryService(){
+    private void bindMemoryService() {
         Intent intent = new Intent();
         intent.setAction("com.paul.test.server.share_memeory");
         intent.setPackage("com.paul.test.server");

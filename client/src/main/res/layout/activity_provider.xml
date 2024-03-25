@@ -5,10 +5,11 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context=".ClientMainActivity">
+    tools:context=".ClientProviderActivity">
 
 
-    <TextView
+    <EditText
+        android:id="@+id/ed_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="client"
@@ -16,33 +17,18 @@
         android:layout_gravity="top"
         android:textSize="20dp"
         android:gravity="top"/>
-
     <Button
-        android:id="@+id/send"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="发送"
+        android:onClick="insertData"
+        android:text="保存"
         />
 
     <Button
-        android:id="@+id/unbind"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="解绑"
+        android:onClick="qureyData"
+        android:text="查询"
         />
 
-    <Button
-        android:id="@+id/memory_share_get"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="获取服务端共享内存数据"
-        />
-
-    <Button
-        android:id="@+id/provider"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="测试provider"
-        />
 </LinearLayout>
